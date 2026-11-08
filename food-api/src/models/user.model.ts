@@ -21,7 +21,7 @@ const userSchema = new Schema({
   address: {
     type: String,
     required: false,
-    default: "address not added",
+    default: "",
   },
   image: {
     type: String,

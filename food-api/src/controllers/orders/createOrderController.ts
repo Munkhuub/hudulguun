@@ -1,6 +1,10 @@
 import { isValidObjectId } from "mongoose";
 import { orderModel } from "../../models/food-order.model";
 import { foodModel } from "../../models/food.model";
+import { userModel } from "../../models/user.model";
+
+// Old accounts were created with this placeholder instead of an empty address.
+const NO_ADDRESS = "address not added";
 
 const MAX_QTY_PER_ITEM = 99;
 
@@ -29,6 +33,12 @@ export const createOrderController = async (req, res) => {
   }
 
   try {
+    const user = await userModel.findById(req.userId).select("address");
+    const shippingAddress = String(user?.address ?? "").trim();
+    if (!shippingAddress || shippingAddress === NO_ADDRESS) {
+      return res.status(400).json({ message: "Delivery address is required" });
+    }
+
     const ids = [...quantities.keys()];
     const products = await foodModel.find({ _id: { $in: ids } }).select("price");
     if (products.length !== ids.length) {
@@ -45,6 +55,7 @@ export const createOrderController = async (req, res) => {
       user: req.userId,
       totalPrice,
       foodOrderItems: ids.map((food) => ({ food, quantity: quantities.get(food) })),
+      shippingAddress,
       status: "Pending",
       createdAt: now,
       updatedAt: now,

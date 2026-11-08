@@ -45,7 +45,7 @@ const CartDetail = () => {
       toast.error("Захиалга өгөхийн тулд нэвтэрнэ үү");
       return;
     }
-    if (!user?.address) {
+    if (!user?.address?.trim() || user.address === "address not added") {
       toast.error("Хүргэлтийн хаягаа оруулна уу");
       return;
     }

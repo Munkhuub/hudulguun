@@ -26,6 +26,10 @@ const orderSchema = new Schema({
     default: [],
     required: true,
   },
+  shippingAddress: {
+    type: String,
+    required: false,
+  },
   status: {
     type: String,
     enum: ["Pending", "Canceled", "Delivered"],

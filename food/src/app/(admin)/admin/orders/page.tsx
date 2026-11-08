@@ -203,7 +203,7 @@ export default function Home() {
                   <td className="w-40 font-medium p-4">{order.totalPrice.toLocaleString("en-US")}₮</td>
                   <td className="w-[213.5px] text-xs p-4">
                     <AddressToggler
-                      address={order.user?.address}
+                      address={order.shippingAddress || order.user?.address}
                       maxLength={57}
                     />
                   </td>

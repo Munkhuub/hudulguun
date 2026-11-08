@@ -35,14 +35,21 @@ export const CartProvider = ({ children }: { children: ReactNode }) => {
   const { user } = useAuth();
 
   useEffect(() => {
-    const savedCart = localStorage.getItem("foodCart");
-    if (savedCart) {
-      setCartItems(JSON.parse(savedCart));
+    try {
+      const savedCart = localStorage.getItem("foodCart");
+      const parsed = savedCart ? JSON.parse(savedCart) : [];
+      if (Array.isArray(parsed)) setCartItems(parsed);
+    } catch {
+      // Corrupted or blocked storage: start with an empty cart.
     }
   }, []);
 
   useEffect(() => {
-    localStorage.setItem("foodCart", JSON.stringify(cartItems));
+    try {
+      localStorage.setItem("foodCart", JSON.stringify(cartItems));
+    } catch {
+      // Storage full or blocked (private mode): cart still works for this visit.
+    }
   }, [cartItems]);
 
   const addToCart = (food: FoodsType, quantity: number) => {

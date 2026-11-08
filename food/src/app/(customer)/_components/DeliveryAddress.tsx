@@ -57,7 +57,7 @@ const DeliveryAddress = ({}) => {
       setOpen(false);
     } catch (error) {
       console.error("Failed to update address", error);
-      setError("Failed to update address. Please try again.");
+      setError("Хаяг хадгалж чадсангүй. Дахин оролдоно уу.");
     } finally {
       setIsSubmitting(false);
     }
@@ -100,7 +100,7 @@ const DeliveryAddress = ({}) => {
           <MapPin className="text-[#EF4444]" />
           <p className="text-[#EF4444]">Хүргэлтийн хаяг:</p>
           <p className="text-[#71717A] truncate max-w-[100px] ">
-            {user?.address || "Add Location"}
+            {user?.address && user.address !== "address not added" ? user.address : "Хаяг нэмэх"}
           </p>
           <ChevronRightIcon className="text-[#71717A]" />
         </Button>
