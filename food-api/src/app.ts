@@ -19,9 +19,10 @@ const allowedOrigins = (process.env.CORS_ORIGINS || "")
   .map((o) => o.trim())
   .filter(Boolean);
 
-app
-  .use(cors(allowedOrigins.length ? { origin: allowedOrigins } : undefined))
-  .use(express.json({ limit: "1mb" }))
+// All routes live under /api (public path on Vercel). They are also mounted at "/"
+// so the API still works if the platform strips the /api prefix before forwarding.
+const api = express.Router();
+api
   .get("/health", (_req, res) => {
     res.json({ ok: true });
   })
@@ -40,7 +41,13 @@ app
   .use("/countAll", countAllRouter)
   .use("/auth", authRouter)
   .use("/orders", orderRouter)
-  .use("/user", userRouter)
+  .use("/user", userRouter);
+
+app
+  .use(cors(allowedOrigins.length ? { origin: allowedOrigins } : undefined))
+  .use(express.json({ limit: "1mb" }))
+  .use("/api", api)
+  .use("/", api)
   .use((_req, res) => {
     res.status(404).json({ message: "Not found" });
   });

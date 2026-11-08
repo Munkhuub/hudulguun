@@ -22,8 +22,8 @@ food/        Next.js 15 (App Router) + React 19 + Tailwind + shadcn/ui, axios, r
                                     DeliveryAddress, OrderHistory, UserProfile, MyProfile, Footer (+ skeletons)
   src/app/(admin)/admin/            Admin: AddFood, EditFood, AddCategory, CategoryFoods, SideBar, orders/
   src/app/(auth)/                   signin, signUp
-  src/axios/                        `api` axios instance (baseURL = process.env.API_URL), setAuthToken
-food-api/    Express 5 + Mongoose 8 + JWT, deployed on Vercel (api/index.ts)
+  src/axios/                        `api` axios instance (baseURL = "/api", same origin), setAuthToken
+food-api/    Express 5 + Mongoose 8 + JWT; app in src/app.ts (all routes under /api), src/index.ts = local listen
   src/models/        food.model, food-category.model, food-order.model, user.model
   src/routes/        auth, category, food, order, user, count, countAll
   src/controllers/   one folder per resource
@@ -141,7 +141,15 @@ Price shown = `isPreOrder && preOrderPrice ? preOrderPrice : price`. No buyer li
 - **Before each deploy:** `npm run build` + `tsc --noEmit` + lint pass with zero errors; manually test on a phone: browse → variant → cart → checkout → order appears in admin.
 - Lighthouse mobile ≥ 90 (performance, accessibility, SEO).
 
-## 11. Conventions / notes
+## 11. Deployment (Vercel services)
+
+- Root `vercel.json` → one Vercel project, two services: `web` (Next.js, root `food/`) and `api` (Express, root `food-api/`, entrypoint `src/app.ts`).
+- Public routing: `/api/*` → api, everything else → web. Same domain, so no CORS.
+- Binding: `web` → `api` as `API_INTERNAL_URL` (runtime, server functions only). Use `serverFetch()` from `food/src/lib/server-api.ts` for server-side calls; browser code uses `@/axios` ("/api"). Never set API_INTERNAL_URL manually.
+- Local: `npm run dev` in both folders; `food/.env` has `API_PROXY_URL=http://localhost:3001` (next.config rewrites `/api/*` to it). Or run `vercel dev` at the root.
+- Vercel env vars: `MONGODB_URI`, `MONGODB_DB`, `JWT_SECRET`.
+
+## 12. Conventions / notes
 
 - Keep existing stack & patterns (shadcn/ui components in `food/src/components/ui`, `api` axios instance, CartContext).
 - All user-facing strings in Mongolian; code identifiers in English.

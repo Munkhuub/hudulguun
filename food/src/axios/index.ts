@@ -1,7 +1,9 @@
 import axios from "axios";
 
 export const api = axios.create({
-  baseURL: process.env.API_URL,
+  // Same-origin: on Vercel, /api/* is routed to the food-api service.
+  // Locally, next.config.ts proxies /api/* to API_PROXY_URL.
+  baseURL: "/api",
   timeout: 15000,
 });
 

@@ -1,0 +1,21 @@
+{
+  "$schema": "https://openapi.vercel.sh/vercel.json",
+  "services": {
+    "web": {
+      "root": "food",
+      "framework": "nextjs",
+      "bindings": [
+        { "type": "service", "service": "api", "format": "url", "env": "API_INTERNAL_URL" }
+      ]
+    },
+    "api": {
+      "root": "food-api",
+      "framework": "express",
+      "entrypoint": "src/app.ts"
+    }
+  },
+  "rewrites": [
+    { "source": "/api/(.*)", "destination": { "service": "api" } },
+    { "source": "/(.*)", "destination": { "service": "web" } }
+  ]
+}
