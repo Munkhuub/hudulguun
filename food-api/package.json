@@ -1,13 +1,12 @@
 {
   "name": "food-api",
   "version": "1.0.0",
-  "main": "index.js",
+  "main": "src/app.ts",
   "scripts": {
     "dev": "nodemon src/index.ts",
-    "build": "tsc",
     "start": "node dist/src/index.js",
-    "deploy": "vercel",
-    "login": "vercel login"
+    "typecheck": "tsc --noEmit",
+    "build:local": "tsc"
   },
   "keywords": [],
   "author": "",
