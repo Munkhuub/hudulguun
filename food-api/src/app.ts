@@ -50,6 +50,12 @@ app
   .use("/", api)
   .use((_req, res) => {
     res.status(404).json({ message: "Not found" });
+  })
+  // Malformed JSON / thrown errors → JSON instead of Express's default HTML page.
+  .use((err: any, _req: express.Request, res: express.Response, _next: express.NextFunction) => {
+    const status = err?.type === "entity.parse.failed" ? 400 : err?.status || 500;
+    if (status >= 500) console.error("Unhandled error:", err);
+    res.status(status).json({ message: status === 400 ? "Invalid request body" : "Server Error" });
   });
 
 export default app;

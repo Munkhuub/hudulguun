@@ -42,7 +42,10 @@ export const createOrderController = async (req, res) => {
     const ids = [...quantities.keys()];
     const products = await foodModel.find({ _id: { $in: ids } }).select("price");
     if (products.length !== ids.length) {
-      return res.status(400).json({ message: "Some products no longer exist" });
+      // Tell the client which cart items to drop (deleted products).
+      const found = new Set(products.map((p) => String(p._id)));
+      const missing = ids.filter((id) => !found.has(id));
+      return res.status(409).json({ message: "Some products no longer exist", missing });
     }
 
     const totalPrice = products.reduce(

@@ -1,20 +1,16 @@
 import { foodModel } from "../../models/food.model";
+import { validateFood } from "./validate-food";
 
 export const createOneFoodController = async (req, res) => {
-  const { foodName, price, image, ingredients, category } = req.body;
+  const result = validateFood(req.body);
+  if ("error" in result) return res.status(400).json({ message: result.error });
 
   try {
-    await foodModel.create({
-      foodName,
-      price,
-      image,
-      ingredients,
-      category,
-      createdAt: new Date(),
-      updatedAt: new Date(),
-    });
-    return res.status(201).json({ message: "Hool shit nemegdsen" });
+    const now = new Date();
+    const food = await foodModel.create({ ...result.data, createdAt: now, updatedAt: now });
+    return res.status(201).json({ food });
   } catch (error) {
-    res.status(500).json({ message: "Server Error", error });
+    console.error("Create food failed:", error);
+    res.status(500).json({ message: "Server Error" });
   }
 };
