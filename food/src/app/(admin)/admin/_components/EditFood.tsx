@@ -20,6 +20,7 @@ import { z } from "zod";
 import { FoodEditDeleteButton } from "./FoodEditDeleteButton";
 import { api } from "@/axios";
 import { toast } from "sonner";
+import { parseVariants, VARIANTS_HINT } from "./variants";
 
 type CategoryEditProps = {
   food: FoodsTypeCategory;
@@ -30,6 +31,7 @@ type CategoryEditProps = {
 const formSchema = z.object({
   foodName: z.string().min(1, "Нэр оруулна уу"),
   ingredients: z.string().min(1, "Тайлбар оруулна уу"),
+  variants: z.string(),
   price: z.number().positive("Үнэ 0-ээс их байх ёстой"),
   categoryId: z.string().min(1, "Ангилал сонгоно уу"),
   image: z.string().url("Зураг оруулна уу"),
@@ -52,6 +54,7 @@ export const EditFood = ({ food, categoryId, getFoods }: CategoryEditProps) => {
     defaultValues: {
       foodName: food.foodName,
       ingredients: food.ingredients,
+      variants: (food.variants ?? []).join(", "),
       price: food.price,
       categoryId: categoryId,
       image: food.image || "",
@@ -62,8 +65,8 @@ export const EditFood = ({ food, categoryId, getFoods }: CategoryEditProps) => {
     try {
       setLoading(true);
 
-      const { categoryId: category, ...rest } = data;
-      await api.put(`/food/${food._id}`, { ...rest, category });
+      const { categoryId: category, variants, ...rest } = data;
+      await api.put(`/food/${food._id}`, { ...rest, category, variants: parseVariants(variants) });
 
       toast.success("Бүтээгдэхүүн шинэчлэгдлээ");
       setOpen(false);
@@ -166,6 +169,21 @@ export const EditFood = ({ food, categoryId, getFoods }: CategoryEditProps) => {
                   {errors.ingredients.message}
                 </p>
               )}
+            </div>
+          </div>
+
+          <div className="grid grid-cols-4 items-start gap-4">
+            <Label htmlFor="variants" className="text-right text-[#71717A] text-xs mt-2">
+              Өнгө
+            </Label>
+            <div className="col-span-3">
+              <input
+                id="variants"
+                {...register("variants")}
+                placeholder="Бүдэг өнгө, Тод өнгө"
+                className="w-[288px] h-9 border border-input rounded-md px-3 text-sm"
+              />
+              <p className="mt-1 w-[288px] text-xs text-[#71717A]">{VARIANTS_HINT}</p>
             </div>
           </div>
 

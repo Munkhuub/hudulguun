@@ -1,5 +1,8 @@
+import type { Metadata } from "next";
 import { SideBar } from "./_components/SideBar";
 import { AdminGuard } from "./_components/AdminGuard";
+
+export const metadata: Metadata = { title: "Админ", robots: { index: false, follow: false } };
 
 export default function AdminLayout({
   children,

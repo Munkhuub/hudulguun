@@ -1,17 +1,14 @@
 "use client";
-import { useAuth } from "@/app/_providers/AuthProvider";
-import React, {
-  createContext,
-  useContext,
-  useEffect,
-  useState,
-  ReactNode,
-} from "react";
+import React, { createContext, useCallback, useContext, useEffect, useState, ReactNode } from "react";
 import { toast } from "sonner";
 import { FoodsType } from "./Foods";
 
-interface CartItem {
+export interface CartItem {
+  /** Unique line key: product id + variant. */
+  key: string;
+  /** Product id. */
   id: string;
+  variant: string;
   foodName: string;
   price: number;
   quantity: number;
@@ -21,140 +18,127 @@ interface CartItem {
 
 interface CartContextType {
   cartItems: CartItem[];
-  addToCart: (food: FoodsType, quantity: number) => void;
-  removeItem: (id: string) => void;
-  updateQuantity: (id: string, newQuantity: number) => void;
+  hydrated: boolean;
+  addToCart: (food: FoodsType, quantity: number, variant?: string) => void;
+  removeItem: (key: string) => void;
+  removeProducts: (productIds: string[]) => void;
+  updateQuantity: (key: string, newQuantity: number) => void;
   calculateTotal: () => string;
   clearCart: () => void;
 }
 
 // Must match MAX_QTY_PER_ITEM in food-api createOrderController.
-const MAX_QTY = 99;
+export const MAX_QTY = 99;
+const STORAGE_KEY = "foodCart";
+
+const lineKey = (id: string, variant: string) => (variant ? `${id}::${variant}` : id);
+
+// Accepts current and older stored shapes; drops anything malformed.
+const sanitize = (raw: unknown): CartItem[] => {
+  if (!Array.isArray(raw)) return [];
+  const out: CartItem[] = [];
+  for (const i of raw) {
+    if (!i || typeof i !== "object") continue;
+    const id = String((i as CartItem).id ?? "");
+    const variant = String((i as CartItem).variant ?? "");
+    const quantity = Number((i as CartItem).quantity);
+    const price = Number((i as CartItem).price);
+    if (!/^[a-f0-9]{24}$/i.test(id) || !Number.isInteger(quantity) || quantity < 1 || !Number.isFinite(price)) continue;
+    out.push({
+      key: lineKey(id, variant),
+      id,
+      variant,
+      quantity: Math.min(quantity, MAX_QTY),
+      price,
+      foodName: String((i as CartItem).foodName ?? ""),
+      image: String((i as CartItem).image ?? ""),
+      ingredients: String((i as CartItem).ingredients ?? ""),
+    });
+  }
+  return out;
+};
 
 const CartContext = createContext<CartContextType | undefined>(undefined);
 
 export const CartProvider = ({ children }: { children: ReactNode }) => {
   const [cartItems, setCartItems] = useState<CartItem[]>([]);
-  const { user } = useAuth();
+  // Don't write to storage until we've read it, or the empty initial state wipes the cart.
+  const [hydrated, setHydrated] = useState(false);
 
   useEffect(() => {
     try {
-      const savedCart = localStorage.getItem("foodCart");
-      const parsed = savedCart ? JSON.parse(savedCart) : [];
-      if (Array.isArray(parsed)) {
-        setCartItems(
-          parsed.filter(
-            (i) =>
-              i &&
-              typeof i.id === "string" &&
-              /^[a-f0-9]{24}$/i.test(i.id) &&
-              Number.isInteger(i.quantity) &&
-              i.quantity > 0 &&
-              typeof i.price === "number"
-          )
-        );
-      }
+      const saved = localStorage.getItem(STORAGE_KEY);
+      setCartItems(sanitize(saved ? JSON.parse(saved) : []));
     } catch {
       // Corrupted or blocked storage: start with an empty cart.
     }
+    setHydrated(true);
   }, []);
 
   useEffect(() => {
+    if (!hydrated) return;
     try {
-      localStorage.setItem("foodCart", JSON.stringify(cartItems));
+      localStorage.setItem(STORAGE_KEY, JSON.stringify(cartItems));
     } catch {
       // Storage full or blocked (private mode): cart still works for this visit.
     }
-  }, [cartItems]);
+  }, [cartItems, hydrated]);
 
-  const addToCart = (food: FoodsType, quantity: number) => {
-    if (!user) {
-      toast.error("Захиалга өгөхийн тулд нэвтэрнэ үү");
-      return;
-    }
-    try {
-      const foodId =
-        food._id || `food-${food.foodName.replace(/\s+/g, "-").toLowerCase()}`;
-
-      setCartItems((prevItems) => {
-        const existingItemIndex = prevItems.findIndex(
-          (item) => item.id === foodId
+  const addToCart = (food: FoodsType, quantity: number, variant = "") => {
+    const key = lineKey(food._id, variant);
+    setCartItems((prev) => {
+      const existing = prev.find((i) => i.key === key);
+      if (existing) {
+        return prev.map((i) =>
+          i.key === key ? { ...i, quantity: Math.min(i.quantity + quantity, MAX_QTY) } : i
         );
-
-        if (existingItemIndex >= 0) {
-          const newItems = [...prevItems];
-          newItems[existingItemIndex] = {
-            ...newItems[existingItemIndex],
-            quantity: Math.min(newItems[existingItemIndex].quantity + quantity, MAX_QTY),
-          };
-          return newItems;
-        } else {
-          return [
-            ...prevItems,
-            {
-              id: foodId,
-              foodName: food.foodName,
-              price: food.price,
-              quantity: quantity,
-              image: food.image,
-              ingredients: food.ingredients,
-            },
-          ];
-        }
-      });
-
-      toast.success(
-        `${food.foodName} (${quantity} ш) сагсанд нэмэгдлээ`
-      );
-    } catch (error) {
-      console.error("Error adding to cart:", error);
-      toast.error("Сагсанд нэмж чадсангүй. Дахин оролдоно уу.");
-    }
+      }
+      return [
+        ...prev,
+        {
+          key,
+          id: food._id,
+          variant,
+          foodName: food.foodName,
+          price: food.price,
+          quantity: Math.min(quantity, MAX_QTY),
+          image: food.image,
+          ingredients: food.ingredients,
+        },
+      ];
+    });
+    toast.success(`${food.foodName}${variant ? ` · ${variant}` : ""} (${quantity} ш) сагсанд нэмэгдлээ`);
   };
 
-  const removeItem = (id: string) => {
-    const removedItem = cartItems.find((item) => item.id === id);
-
-    setCartItems((prevItems) => prevItems.filter((item) => item.id !== id));
-
-    if (removedItem) {
-      toast(`${removedItem.foodName} сагснаас хасагдлаа`);
-    }
+  const removeItem = (key: string) => {
+    const removed = cartItems.find((i) => i.key === key);
+    setCartItems((prev) => prev.filter((i) => i.key !== key));
+    if (removed) toast(`${removed.foodName} сагснаас хасагдлаа`);
   };
 
-  const updateQuantity = (id: string, newQuantity: number) => {
+  const removeProducts = useCallback((productIds: string[]) => {
+    const ids = new Set(productIds);
+    setCartItems((prev) => prev.filter((i) => !ids.has(i.id)));
+  }, []);
+
+  const updateQuantity = (key: string, newQuantity: number) => {
     if (newQuantity <= 0) {
-      removeItem(id);
+      removeItem(key);
       return;
     }
-
-    setCartItems((prevItems) =>
-      prevItems.map((item) =>
-        item.id === id ? { ...item, quantity: Math.min(newQuantity, MAX_QTY) } : item
-      )
+    setCartItems((prev) =>
+      prev.map((i) => (i.key === key ? { ...i, quantity: Math.min(newQuantity, MAX_QTY) } : i))
     );
   };
 
-  const calculateTotal = () => {
-    return cartItems
-      .reduce((total, item) => total + item.price * item.quantity, 0)
-      .toFixed(2);
-  };
+  const calculateTotal = () =>
+    String(cartItems.reduce((total, i) => total + i.price * i.quantity, 0));
 
-  const clearCart = () => {
-    setCartItems([]);
-  };
+  const clearCart = useCallback(() => setCartItems([]), []);
 
   return (
     <CartContext.Provider
-      value={{
-        cartItems,
-        addToCart,
-        removeItem,
-        updateQuantity,
-        calculateTotal,
-        clearCart,
-      }}
+      value={{ cartItems, hydrated, addToCart, removeItem, removeProducts, updateQuantity, calculateTotal, clearCart }}
     >
       {children}
     </CartContext.Provider>

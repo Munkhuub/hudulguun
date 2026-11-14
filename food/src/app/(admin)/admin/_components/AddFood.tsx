@@ -15,6 +15,7 @@ import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { toast } from "sonner";
 import { api } from "@/axios";
+import { parseVariants, VARIANTS_HINT } from "./variants";
 
 const UPLOAD_PRESET = "foodWebApp";
 const CLOUD_NAME = "dpbmpprw5";
@@ -36,6 +37,7 @@ export const AddFood = ({
   const [foodName, setFoodName] = useState("");
   const [price, setPrice] = useState("");
   const [ingredients, setТайлбар] = useState("");
+  const [variants, setVariants] = useState("");
 
   const uploadImage = async (file: File | undefined) => {
     if (!file) {
@@ -93,6 +95,7 @@ export const AddFood = ({
         price: Number(price),
         image: deployedImg,
         ingredients,
+        variants: parseVariants(variants),
         category: categoryId,
       });
 
@@ -102,6 +105,7 @@ export const AddFood = ({
       setFoodName("");
       setPrice("");
       setТайлбар("");
+      setVariants("");
       setDeployedImg("");
     } catch (error) {
       console.error("Error creating food:", error);
@@ -163,6 +167,19 @@ export const AddFood = ({
               className="h-[90px] resize-none"
               onChange={(e) => setТайлбар(e.target.value)}
             />
+          </div>
+
+          <div className="flex flex-col gap-2">
+            <Label htmlFor="food-variants" className="text-left">
+              Өнгө (заавал биш)
+            </Label>
+            <Input
+              id="food-variants"
+              value={variants}
+              placeholder="Бүдэг өнгө, Тод өнгө"
+              onChange={(e) => setVariants(e.target.value)}
+            />
+            <p className="text-xs text-[#71717A]">{VARIANTS_HINT}</p>
           </div>
 
           <div className="flex flex-col gap-2">

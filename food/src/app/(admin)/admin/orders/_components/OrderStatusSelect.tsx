@@ -17,12 +17,9 @@ type statusProps = {
   order: ordersType;
 };
 
-const statusOptions = ["Pending", "Canceled", "Delivered"];
-const STATUS_LABELS: Record<string, string> = {
-  Pending: "Хүлээгдэж буй",
-  Canceled: "Цуцлагдсан",
-  Delivered: "Хүргэгдсэн",
-};
+import { ORDER_STATUS_LABELS as STATUS_LABELS } from "@/app/(customer)/_components/OrderHistory";
+
+const statusOptions = ["Pending", "Paid", "Shipped", "Delivered", "Canceled"];
 
 const OrderStatusSelect = ({ order }: statusProps) => {
   const [newStatus, setNewStatus] = useState(order.status);

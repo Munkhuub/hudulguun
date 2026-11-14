@@ -10,6 +10,11 @@ export const signin = async (req, res) => {
     return res.status(400).json({ message: "Email and password are required" });
   }
 
+  if (!process.env.JWT_SECRET) {
+    console.error("JWT_SECRET environment variable is not set");
+    return res.status(500).json({ message: "Server configuration error" });
+  }
+
   try {
     const user = await userModel.findOne({ email });
     const ok = user && (await bcrypt.compare(password, user.password));

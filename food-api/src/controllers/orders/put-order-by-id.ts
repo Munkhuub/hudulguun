@@ -1,6 +1,6 @@
-import { orderModel } from "../../models/food-order.model";
+import { orderModel, ORDER_STATUSES } from "../../models/food-order.model";
 
-const STATUSES = orderModel.schema.path("status").options.enum as string[];
+const STATUSES: readonly string[] = ORDER_STATUSES;
 
 // Admin-only: only the status of an order can be changed.
 export const putOrderById = async (req, res) => {

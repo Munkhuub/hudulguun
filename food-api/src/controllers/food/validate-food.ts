@@ -6,6 +6,7 @@ export type FoodInput = {
   image: string;
   ingredients: string;
   category: string;
+  variants: string[];
 };
 
 // Returns the cleaned product fields, or an error message for a 400 response.
@@ -16,10 +17,14 @@ export const validateFood = (body: any): { data: FoodInput } | { error: string }
   const category = String(body?.category ?? "");
   const price = Number(body?.price);
 
+  const rawVariants = Array.isArray(body?.variants) ? body.variants : [];
+  const variants = [...new Set(rawVariants.map((v: unknown) => String(v ?? "").trim()).filter(Boolean))] as string[];
+
   if (!foodName) return { error: "Name is required" };
+  if (variants.length > 20 || variants.some((v) => v.length > 60)) return { error: "Invalid variants" };
   if (!Number.isInteger(price) || price <= 0) return { error: "Price must be a positive whole number" };
   if (!/^https?:\/\//.test(image)) return { error: "Image URL is required" };
   if (!isValidObjectId(category)) return { error: "Invalid category" };
 
-  return { data: { foodName, price, image, ingredients, category } };
+  return { data: { foodName, price, image, ingredients, category, variants } };
 };

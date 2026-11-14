@@ -10,6 +10,7 @@ export type FoodsType = {
   category: { categoryName: string };
   price: number;
   _id: string;
+  variants?: string[];
 };
 
 type AppetizersType = {

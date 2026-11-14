@@ -1,100 +1,90 @@
-import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { TabsContent } from "@/components/ui/tabs";
 import React from "react";
+import { formatDate } from "date-fns";
 import OrderFoodIcon from "./_assets/OrderFoodIcon";
 import OrderDateIcon from "./_assets/OrderDateIcon";
-import { formatDate } from "date-fns";
 import OrderMapIcon from "./_assets/OrderMapIcon";
 
-type OrderHistoryItem = {
+export type OrderHistoryItem = {
   _id: string;
+  orderNumber?: string;
   totalPrice: number;
   status: string;
   createdAt: string;
-  foodOrderItems: Array<{ food: { foodName: string } | null; quantity: number }>;
+  foodOrderItems: Array<{ food: { foodName: string } | null; quantity: number; variant?: string }>;
   shippingAddress: string;
 };
+
+export const ORDER_STATUS_LABELS: Record<string, string> = {
+  Pending: "Хүлээгдэж буй",
+  Paid: "Төлөгдсөн",
+  Shipped: "Хүргэлтэнд гарсан",
+  Delivered: "Хүргэгдсэн",
+  Canceled: "Цуцлагдсан",
+};
+
+const STATUS_STYLE: Record<string, string> = {
+  Pending: "bg-amber-100 text-amber-800",
+  Paid: "bg-blue-100 text-blue-800",
+  Shipped: "bg-violet-100 text-violet-800",
+  Delivered: "bg-green-100 text-green-800",
+  Canceled: "bg-gray-200 text-gray-700",
+};
+
+export const orderRef = (o: { orderNumber?: string; _id: string }) =>
+  o.orderNumber || `#${o._id.slice(-6).toUpperCase()}`;
 
 type OrderHistoryProps = {
   orderHistory: OrderHistoryItem[];
   isLoadingOrders: boolean;
 };
+
 const OrderHistory = ({ orderHistory, isLoadingOrders }: OrderHistoryProps) => {
   return (
-    <TabsContent value="history">
-      <Card>
-        <CardHeader>
-          <CardTitle>Захиалгын түүх</CardTitle>
-        </CardHeader>
-        <CardContent className="space-y-2 ">
-          <div className="max-h-160 overflow-auto scroll-auto">
-            {isLoadingOrders ? (
-              <div className="text-center text-gray-500">
-                Ачааллаж байна...
-              </div>
-            ) : orderHistory.length > 0 ? (
-              orderHistory.map((order) => (
-                <div key={order._id} className="space-y-4 ">
-                  <div className="flex flex-col gap-3 border-b pb-4 border-gray-200 last:border-b-0">
-                    <div className="flex justify-between items-center">
-                      <div className="flex gap-2">
-                        <span className="font-bold">
-                          {order.totalPrice.toLocaleString("en-US")}₮
-                        </span>
-                        <span className="text-gray-600">
-                          (#{order._id.slice(-6).toUpperCase()})
-                        </span>
-                      </div>
-                      <Button
-                        className={`bg-white border text-xs rounded-full w-[68px] h-[28px] ${
-                          order.status === "Pending"
-                            ? "border-[#EF4444] text-[#EF4444]"
-                            : "border-green-500 text-green-500"
-                        }`}
-                      >
-                        {({ Pending: "Хүлээгдэж буй", Delivered: "Хүргэгдсэн", Canceled: "Цуцлагдсан" } as Record<string, string>)[order.status] ?? order.status}
-                      </Button>
-                    </div>
-                    {order.foodOrderItems.map((item, itemIndex) => (
-                      <div key={itemIndex} className="flex justify-between">
-                        <div className="flex gap-2 items-center">
-                          <OrderFoodIcon />
-                          <p>{item.food?.foodName ?? "Устгагдсан бүтээгдэхүүн"}</p>
-                        </div>
-                        <div>x{item.quantity}</div>
-                      </div>
-                    ))}
-                    <div className="flex justify-between">
-                      <div className="flex gap-2 items-center">
-                        <OrderDateIcon />
-                        <p>
-                          {formatDate(
-                            new Date(order.createdAt),
-                            "yyyy-MM-dd HH:mm"
-                          )}
-                        </p>
-                      </div>
-                    </div>
-                    <div className="flex justify-between">
-                      <div className="flex gap-2 items-center">
-                        <OrderMapIcon />
-                        <p className="max-w-[70%] truncate">
-                          {order.shippingAddress}
-                        </p>
-                      </div>
-                    </div>
-                  </div>
+    <TabsContent value="history" className="mt-4">
+      {isLoadingOrders ? (
+        <div className="rounded-2xl bg-white p-8 text-center text-[#1A1A1A]/60">Ачааллаж байна...</div>
+      ) : orderHistory.length > 0 ? (
+        <ul className="flex flex-col gap-3">
+          {orderHistory.map((order) => (
+            <li key={order._id} className="flex flex-col gap-3 rounded-2xl bg-white p-4 text-sm">
+              <div className="flex items-center justify-between gap-2">
+                <div>
+                  <p className="font-bold">{order.totalPrice.toLocaleString("en-US")}₮</p>
+                  <p className="text-xs text-[#1A1A1A]/50">{orderRef(order)}</p>
                 </div>
-              ))
-            ) : (
-              <div className="p-6 text-center text-gray-500">
-                Танд одоогоор захиалга алга.
+                <span className={`rounded-full px-2.5 py-1 text-xs font-semibold ${STATUS_STYLE[order.status] ?? STATUS_STYLE.Pending}`}>
+                  {ORDER_STATUS_LABELS[order.status] ?? order.status}
+                </span>
               </div>
-            )}
-          </div>
-        </CardContent>
-      </Card>
+              {order.foodOrderItems.map((item, i) => (
+                <div key={i} className="flex justify-between gap-2">
+                  <div className="flex min-w-0 items-center gap-2">
+                    <OrderFoodIcon />
+                    <p className="truncate">
+                      {item.food?.foodName ?? "Устгагдсан бүтээгдэхүүн"}
+                      {item.variant ? ` · ${item.variant}` : ""}
+                    </p>
+                  </div>
+                  <span>x{item.quantity}</span>
+                </div>
+              ))}
+              <div className="flex items-center gap-2 text-[#1A1A1A]/70">
+                <OrderDateIcon />
+                {formatDate(new Date(order.createdAt), "yyyy-MM-dd HH:mm")}
+              </div>
+              {order.shippingAddress && (
+                <div className="flex items-center gap-2 text-[#1A1A1A]/70">
+                  <OrderMapIcon />
+                  <span className="truncate">{order.shippingAddress}</span>
+                </div>
+              )}
+            </li>
+          ))}
+        </ul>
+      ) : (
+        <div className="rounded-2xl bg-white p-8 text-center text-[#1A1A1A]/60">Танд одоогоор захиалга алга.</div>
+      )}
     </TabsContent>
   );
 };

@@ -29,9 +29,14 @@ export type ordersType = {
   createdAt: string;
   foodOrderItems: Array<{
     food: { foodName: string; image: string; _id: string } | null;
+    variant?: string;
     quantity: number;
   }>;
   shippingAddress: string;
+  orderNumber?: string;
+  customerName?: string;
+  phone?: string;
+  note?: string;
 };
 export default function Home() {
   const [orders, setOrders] = useState<ordersType[]>([]);
@@ -193,8 +198,16 @@ export default function Home() {
               {currentOrders.map((order, index) => (
                 <tr key={order._id}>
                   <th className="w-14 font-medium p-4">{indexOfFirstItem + index + 1}</th>
-                  <th className="w-[213.5px] font-medium p-4">
-                    {order.user?.email ?? "Устгагдсан хэрэглэгч"}
+                  <th className="w-[213.5px] font-medium p-4 text-left">
+                    <span className="block text-black">{order.customerName || order.user?.name || order.user?.email || "Зочин"}</span>
+                    {order.phone && (
+                      <a href={`tel:${order.phone}`} className="block text-xs text-[#0066CC] hover:underline">
+                        {order.phone}
+                      </a>
+                    )}
+                    <span className="block text-xs font-normal">
+                      {order.orderNumber || `#${order._id.slice(-6).toUpperCase()}`}
+                    </span>
                   </th>
                   <th className="w-40 font-medium p-4">
                     <OrderedFoodView order={order} />
@@ -210,6 +223,7 @@ export default function Home() {
                       address={order.shippingAddress || order.user?.address}
                       maxLength={57}
                     />
+                    {order.note && <p className="mt-1 text-[#1A1A1A]">📝 {order.note}</p>}
                   </td>
                   <td className="w-40 p-4">
                     <OrderStatusSelect order={order} />

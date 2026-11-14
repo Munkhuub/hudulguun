@@ -5,7 +5,7 @@ export const getOrderById = async (req, res) => {
   try {
     const order = await orderModel.findById(id).populate("foodOrderItems.food");
     if (!order) return res.status(404).json({ message: "Order not found" });
-    if (String(order.user) !== req.userId && !req.isAdmin) {
+    if (!order.user || String(order.user) !== req.userId && !req.isAdmin) {
       return res.status(403).json({ message: "Forbidden" });
     }
     return res.status(200).json({ order });

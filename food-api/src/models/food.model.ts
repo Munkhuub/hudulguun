@@ -17,6 +17,11 @@ const foodSchema = new Schema({
     type: String,
     required: true,
   },
+  // Colour/variant options, e.g. ["Бүдэг өнгө", "Тод өнгө"]. Empty = no choice needed.
+  variants: {
+    type: [String],
+    default: [],
+  },
   category: {
     type: Schema.Types.ObjectId,
     ref: "category",

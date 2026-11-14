@@ -15,6 +15,7 @@ export type FoodsTypeCategory = {
   image: string;
   category: { categoryName: string };
   price: number;
+  variants?: string[];
 };
 
 export const CategoryFoods = ({

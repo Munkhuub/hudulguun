@@ -51,7 +51,10 @@ const OrderedFoodView = ({ order }: OrderedProps) => {
                     className="size-[32px] rounded-sm object-cover"
                   />
                 )}
-                <p className="flex-grow w-[171px]">{item.food?.foodName ?? "Устгагдсан бүтээгдэхүүн"}</p>
+                <p className="flex-grow w-[171px]">
+                  {item.food?.foodName ?? "Устгагдсан бүтээгдэхүүн"}
+                  {item.variant ? <span className="block text-xs text-[#71717A]">{item.variant}</span> : null}
+                </p>
                 <p>x{item.quantity}</p>
               </div>
             </SelectItem>
