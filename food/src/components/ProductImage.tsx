@@ -1,6 +1,6 @@
 import Image, { ImageProps } from "next/image";
 
-// Hosts listed in next.config.ts images.remotePatterns — keep in sync.
+// Hosts the custom loader (src/lib/image-loader.ts) knows how to resize.
 const OPTIMIZED_HOSTS = new Set(["res.cloudinary.com"]);
 
 type Props = Omit<ImageProps, "src"> & { src?: string | null };
