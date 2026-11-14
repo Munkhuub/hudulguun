@@ -5,6 +5,7 @@ import { useEffect, useState } from "react";
 import { CategoryFoods } from "./_components/CategoryFoods";
 import { useAuth } from "@/app/_providers/AuthProvider";
 import { api } from "@/axios";
+import { UserProfile } from "@/app/(customer)/_components/UserProfile";
 import { CategorySkeleton } from "@/app/(customer)/_components/CategorySkeleton";
 
 export type CategoryType = {
@@ -89,12 +90,8 @@ export default function Home() {
 
   return (
     <div className="min-h-screen w-full bg-[#E4E4E7] px-4 sm:px-6 lg:pl-6 lg:pr-10 py-4 sm:py-6 flex flex-col gap-4 sm:gap-6">
-      <div className="size-8 sm:size-9 bg-black ml-auto rounded-full overflow-hidden border-2 border-white shadow-sm">
-        <img
-          src={user.image}
-          alt={`${user.name || "User"} profile`}
-          className="w-full h-full object-cover"
-        />
+      <div className="ml-auto">
+        <UserProfile />
       </div>
 
       <div className="p-4 sm:p-6 rounded-lg bg-white shadow-sm border border-gray-200">

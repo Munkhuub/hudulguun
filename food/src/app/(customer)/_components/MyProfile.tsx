@@ -14,6 +14,7 @@ import { ChevronRight, UserIcon } from "lucide-react";
 import { useState, ChangeEvent } from "react";
 import { UpdateProfileImage } from "./UpdateProfileImage";
 import { api } from "@/axios";
+import { toast } from "sonner";
 import { AxiosError } from "axios";
 
 interface User {
@@ -75,6 +76,7 @@ export const MyProfile: React.FC<MyProfileProps> = ({ className }) => {
         };
       });
 
+      toast.success("Профайл хадгалагдлаа");
       setOpen(false);
     } catch (err) {
       console.error("Failed to update profile", err);
@@ -82,7 +84,7 @@ export const MyProfile: React.FC<MyProfileProps> = ({ className }) => {
       const axiosError = err as AxiosError<ApiErrorResponse>;
       const errorMessage =
         axiosError.response?.data?.message ||
-        "Something went wrong. Please try again.";
+        "Профайл хадгалж чадсангүй. Дахин оролдоно уу.";
       setError(errorMessage);
     } finally {
       setIsSaving(false);
@@ -207,7 +209,7 @@ export const MyProfile: React.FC<MyProfileProps> = ({ className }) => {
                 Хадгалж байна...
               </div>
             ) : (
-              "Save Changes"
+              "Хадгалах"
             )}
           </Button>
         </DialogFooter>

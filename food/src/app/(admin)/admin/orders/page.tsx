@@ -18,6 +18,7 @@ import {
 } from "@/components/ui/select";
 import OrderedFoodView from "./_components/OrderedFoodView";
 import { api } from "@/axios";
+import { UserProfile } from "@/app/(customer)/_components/UserProfile";
 import { toast } from "sonner";
 
 export type ordersType = {
@@ -128,8 +129,8 @@ export default function Home() {
 
   return (
     <div className="min-h-screen w-full bg-[#E4E4E7] flex flex-col gap-6 pt-6 pb-13 pl-6 pr-10">
-      <div className="size-9 bg-black ml-auto rounded-full">
-        <img src={user.image} alt={user.name ?? "Profile"} />
+      <div className="ml-auto">
+        <UserProfile />
       </div>
       <div className="bg-white h-[800px] rounded-lg px-4">
         <div className="flex justify-between py-4">

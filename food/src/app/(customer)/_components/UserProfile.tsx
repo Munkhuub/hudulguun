@@ -7,7 +7,7 @@ import {
   DialogTitle,
   DialogTrigger,
 } from "@/components/ui/dialog";
-import { Profile } from "./_assets/Profile";
+import { ProductImage } from "@/components/ProductImage";
 import { useEffect, useState } from "react";
 import MyProfile from "./MyProfile";
 import { LogOut, User } from "lucide-react";
@@ -52,13 +52,17 @@ export const UserProfile: React.FC = () => {
   return (
     <Dialog open={open} onOpenChange={setOpen}>
       <DialogTrigger asChild>
-        <Button
-          variant="outline"
-          size="icon"
-          className="rounded-full bg-gradient-to-br from-red-500 to-red-600 border-none hover:from-red-600 hover:to-red-700 transition-all duration-200 shadow-lg hover:shadow-xl"
+        <button
+          type="button"
+          aria-label="Профайл цэс"
+          className="relative flex size-10 shrink-0 items-center justify-center overflow-hidden rounded-full bg-[#1A1A1A] text-sm font-bold text-white shadow-sm ring-2 ring-white transition hover:opacity-90"
         >
-          <Profile />
-        </Button>
+          {user.image ? (
+            <ProductImage src={user.image} alt="" fill sizes="40px" className="object-cover" />
+          ) : (
+            (user.name || user.email || "?").trim().charAt(0).toUpperCase()
+          )}
+        </button>
       </DialogTrigger>
 
       <DialogContent
