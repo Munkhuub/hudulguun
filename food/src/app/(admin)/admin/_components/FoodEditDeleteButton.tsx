@@ -3,6 +3,7 @@ import { Trash } from "lucide-react";
 import { useState } from "react";
 import { FoodsTypeCategory } from "./CategoryFoods";
 import { api } from "@/axios";
+import { toast } from "sonner";
 
 type FoodEditDeleteButtonProps = {
   food: FoodsTypeCategory;
@@ -25,7 +26,7 @@ export const FoodEditDeleteButton = ({
       onDelete();
     } catch (error) {
       console.error("Failed to delete food", error);
-      alert("Устгаж чадсангүй. Дахин оролдоно уу.");
+      toast.error("Устгаж чадсангүй. Дахин оролдоно уу.");
     } finally {
       setLoading(false);
     }

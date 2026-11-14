@@ -1,33 +1,48 @@
-export const CategorySkeleton = () => {
-  return (
-    <div className="px-4 sm:px-6 md:px-8 lg:px-10 bg-[#404040] pb-6 sm:pb-8 md:pb-10 lg:pb-[54px]">
-      <div className="h-6 sm:h-7 md:h-8 bg-gray-300 rounded animate-pulse w-32 sm:w-40 md:w-48 mb-4 sm:mb-6 md:mb-8 lg:mb-[54px]" />
+// Loading placeholders that mirror the real layout (Categories + Foods + FoodCard),
+// so nothing jumps when data arrives.
 
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6 md:gap-8">
-        {Array.from({ length: 6 }).map((_, i) => (
-          <div
-            key={i}
-            className="w-full bg-white rounded-xl md:rounded-[20px] overflow-hidden shadow-sm"
-          >
-            <div className="p-3 sm:p-4 flex flex-col gap-2 sm:gap-3">
-              <div className="aspect-[1.9/1] w-full bg-gray-300 rounded-lg animate-pulse" />
+const pulse = "animate-pulse motion-reduce:animate-none bg-[#1A1A1A]/8";
+const SECTION = "mx-auto w-full max-w-6xl px-4 sm:px-6 lg:px-8";
 
-              <div className="flex flex-col gap-2 sm:gap-3 mt-1">
-                <div className="flex justify-between items-start">
-                  <div className="h-4 sm:h-5 bg-gray-300 rounded animate-pulse w-3/5" />
-                  <div className="h-4 sm:h-5 bg-gray-300 rounded animate-pulse w-1/5" />
-                </div>
-
-                <div className="flex flex-col gap-1.5 sm:gap-2">
-                  <div className="h-3 bg-gray-300 rounded animate-pulse w-full" />
-                  <div className="h-3 bg-gray-300 rounded animate-pulse w-4/5" />
-                  <div className="h-3 bg-gray-300 rounded animate-pulse w-3/5 sm:hidden" />
-                </div>
-              </div>
-            </div>
-          </div>
-        ))}
-      </div>
+/** Mirrors FoodCard. */
+export const ProductCardSkeleton = () => (
+  <div className="flex h-full w-full flex-col overflow-hidden rounded-3xl bg-white shadow-[0_8px_30px_-12px_rgba(26,26,26,0.18)]">
+    <div className={`aspect-square w-full ${pulse}`} />
+    <div className="flex flex-1 flex-col gap-2 p-4 sm:p-5">
+      <div className={`h-6 w-3/5 rounded ${pulse}`} />
+      <div className={`h-4 w-full rounded ${pulse}`} />
+      <div className={`h-4 w-4/5 rounded ${pulse}`} />
+      <div className={`mt-2 h-7 w-1/3 rounded ${pulse}`} />
+      <div className={`h-12 w-full rounded-full ${pulse}`} />
     </div>
-  );
-};
+  </div>
+);
+
+/** Mirrors Foods' grid: 1 column on phones, 2 on tablets, 3 on desktop. */
+export const ProductGridSkeleton = () => (
+  <div className="grid grid-cols-1 gap-5 sm:grid-cols-2 sm:gap-6 lg:grid-cols-3">
+    <ProductCardSkeleton />
+    <div className="hidden sm:block"><ProductCardSkeleton /></div>
+    <div className="hidden lg:block"><ProductCardSkeleton /></div>
+  </div>
+);
+
+/** A whole Foods section. Pass the real name once categories are known. */
+export const CategorySkeleton = ({ title }: { title?: string }) => (
+  <section className={`${SECTION} pt-6 pb-12 sm:pb-16`} aria-busy="true">
+    {title ? (
+      <h3 className="mb-4 text-sm font-semibold tracking-wider text-[#1A1A1A]/50 uppercase">{title}</h3>
+    ) : (
+      <div className={`mb-4 h-4 w-24 rounded ${pulse}`} />
+    )}
+    <ProductGridSkeleton />
+  </section>
+);
+
+/** Mirrors Categories: heading + subtitle. */
+export const CategoriesSkeleton = () => (
+  <div className={`${SECTION} pt-12 sm:pt-16`}>
+    <div className={`h-8 w-44 rounded ${pulse}`} />
+    <div className={`mt-2 h-4 w-56 rounded ${pulse}`} />
+  </div>
+);

@@ -19,6 +19,7 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
 import { FoodEditDeleteButton } from "./FoodEditDeleteButton";
 import { api } from "@/axios";
+import { toast } from "sonner";
 
 type CategoryEditProps = {
   food: FoodsTypeCategory;
@@ -31,7 +32,7 @@ const formSchema = z.object({
   ingredients: z.string().min(1, "Тайлбар оруулна уу"),
   price: z.number().positive("Үнэ 0-ээс их байх ёстой"),
   categoryId: z.string().min(1, "Ангилал сонгоно уу"),
-  image: z.string().url("Valid image URL is required"),
+  image: z.string().url("Зураг оруулна уу"),
 });
 
 type FormValues = z.infer<typeof formSchema>;
@@ -61,14 +62,15 @@ export const EditFood = ({ food, categoryId, getFoods }: CategoryEditProps) => {
     try {
       setLoading(true);
 
-      await api.put(`/food/${food._id}`, {
-        ...data,
-      });
+      const { categoryId: category, ...rest } = data;
+      await api.put(`/food/${food._id}`, { ...rest, category });
 
+      toast.success("Бүтээгдэхүүн шинэчлэгдлээ");
       setOpen(false);
       await getFoods();
     } catch (error) {
       console.error("Failed to update food:", error);
+      toast.error("Бүтээгдэхүүн шинэчилж чадсангүй");
     } finally {
       setLoading(false);
     }

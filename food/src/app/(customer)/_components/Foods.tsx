@@ -1,6 +1,7 @@
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import { FoodCard } from "./FoodCard";
 import { api } from "@/axios";
+import { CategorySkeleton } from "./CategorySkeleton";
 
 export type FoodsType = {
   foodName: string;
@@ -24,9 +25,11 @@ export const Foods = ({
 }: AppetizersType) => {
   const [foods, setFoods] = useState<FoodsType[]>([]);
   const [error, setError] = useState(false);
+  const [loading, setLoading] = useState(true);
 
-  const getFoods = async () => {
+  const getFoods = useCallback(async () => {
     try {
+      setLoading(true);
       setError(false);
       const response = await api.get(`/food?categoryId=${categoryId}`);
       setFoods(response.data.food || []);
@@ -34,60 +37,48 @@ export const Foods = ({
       console.error("Error fetching foods:", error);
       setError(true);
       setFoods([]);
+    } finally {
+      setLoading(false);
     }
-  };
+  }, [categoryId]);
 
   useEffect(() => {
     getFoods();
-  }, [categoryId]);
+  }, [getFoods]);
+
+  // Real title + placeholder cards, so the section doesn't pop in late.
+  if (loading) return <CategorySkeleton title={categoryName} />;
 
   if (!foods.length && !selectedCategory) return null;
 
   return (
-    <div className="px-4 sm:px-6 md:px-8 lg:px-10 xl:px-12 bg-[#404040] pb-8 sm:pb-12 md:pb-[54px] flex flex-col gap-5">
-      <div>
-        <h2 className="text-xl sm:text-2xl md:text-3xl font-semibold text-white mb-6 sm:mb-8 md:mb-[54px]">
+    <section className="mx-auto w-full max-w-6xl px-4 pt-6 pb-12 sm:px-6 sm:pb-16 lg:px-8">
+      {selectedCategory === "" && (
+        <h3 className="mb-4 text-sm font-semibold tracking-wider text-[#1A1A1A]/50 uppercase">
           {categoryName}
-        </h2>
-      </div>
-      <div>
-        {error ? (
-          <div className="text-white text-center py-10 sm:py-16 border border-gray-700 rounded-lg bg-[#353535]">
-            <p className="text-red-400 mb-2">Бүтээгдэхүүн ачааллаж чадсангүй</p>
-            <button
-              onClick={getFoods}
-              className="px-4 py-2 bg-red-500 hover:bg-red-600 rounded-md transition-colors"
-            >
-              Дахин оролдох
-            </button>
-          </div>
-        ) : foods.length > 0 ? (
-          <>
-            <div className="md:hidden">
-              <div className="flex gap-4 overflow-x-auto pb-4 scrollbar-hide snap-x snap-mandatory">
-                {foods.map((food) => (
-                  <div
-                    key={food._id}
-                    className="flex-shrink-0 w-[280px] snap-start"
-                  >
-                    <FoodCard food={food} />
-                  </div>
-                ))}
-              </div>
-            </div>
-
-            <div className="hidden md:grid grid-cols-[repeat(auto-fit,minmax(400px,1fr))] gap-4 sm:gap-6 md:gap-8">
-              {foods.map((food) => (
-                <FoodCard food={food} key={food._id} />
-              ))}
-            </div>
-          </>
-        ) : (
-          <div className="text-white text-center py-10 sm:py-16 border border-gray-700 rounded-lg bg-[#353535]">
-            Энэ ангилалд одоогоор бүтээгдэхүүн алга.
-          </div>
-        )}
-      </div>
-    </div>
+        </h3>
+      )}
+      {error ? (
+        <div className="rounded-3xl bg-white px-4 py-12 text-center">
+          <p className="mb-4 text-[#1A1A1A]/70">Бүтээгдэхүүн ачааллаж чадсангүй</p>
+          <button
+            onClick={getFoods}
+            className="h-11 rounded-full bg-[#1A1A1A] px-6 text-sm font-semibold text-white hover:bg-black"
+          >
+            Дахин оролдох
+          </button>
+        </div>
+      ) : foods.length > 0 ? (
+        <div className="grid grid-cols-1 gap-5 sm:grid-cols-2 sm:gap-6 lg:grid-cols-3">
+          {foods.map((food) => (
+            <FoodCard food={food} key={food._id} />
+          ))}
+        </div>
+      ) : (
+        <div className="rounded-3xl bg-white px-4 py-12 text-center text-[#1A1A1A]/60">
+          Энэ ангилалд одоогоор бүтээгдэхүүн алга.
+        </div>
+      )}
+    </section>
   );
 };

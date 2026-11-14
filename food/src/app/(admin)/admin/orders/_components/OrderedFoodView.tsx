@@ -42,10 +42,7 @@ const OrderedFoodView = ({ order }: OrderedProps) => {
       <SelectContent>
         <SelectGroup>
           {order.foodOrderItems.map((item, i) => (
-            <SelectItem
-              key={item.food._id || i}
-              value={item.food._id || item.food.foodName}
-            >
+            <SelectItem key={item.food?._id ?? i} value={item.food?._id ?? `deleted-${i}`}>
               <div className="flex gap-[10px] items-center">
                 {item.food?.image && (
                   <img
@@ -54,7 +51,7 @@ const OrderedFoodView = ({ order }: OrderedProps) => {
                     className="size-[32px] rounded-sm object-cover"
                   />
                 )}
-                <p className="flex-grow w-[171px]"> {item.food.foodName}</p>
+                <p className="flex-grow w-[171px]">{item.food?.foodName ?? "Устгагдсан бүтээгдэхүүн"}</p>
                 <p>x{item.quantity}</p>
               </div>
             </SelectItem>

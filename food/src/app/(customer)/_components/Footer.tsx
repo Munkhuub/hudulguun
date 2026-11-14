@@ -47,7 +47,7 @@ export const Footer = () => {
         </motion.div>
       </div>
 
-      <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-10">
+      <div className="mx-auto max-w-6xl px-4 sm:px-6 lg:px-8">
         <div className="w-full flex flex-col md:flex-row pt-10 sm:pt-14 justify-between gap-10">
           <div className="flex flex-col text-white gap-3 items-center md:items-start text-center md:text-left">
             <div className="font-display text-xl font-semibold leading-[1.15] tracking-[0.3em]">
@@ -95,7 +95,7 @@ export const Footer = () => {
         </div>
       </div>
 
-      <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-10">
+      <div className="mx-auto max-w-6xl px-4 sm:px-6 lg:px-8">
         <div className="flex flex-col sm:flex-row text-white/50 gap-2 sm:gap-6 py-6 border-t border-white/15 items-center justify-center sm:justify-between mt-10 sm:mt-14 text-sm">
           <p>© {new Date().getFullYear()} Hudul Guun. Бүх эрх хуулиар хамгаалагдсан.</p>
         </div>

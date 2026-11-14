@@ -7,7 +7,10 @@ import { Footer } from "./(customer)/_components/Footer";
 import { useEffect, useState } from "react";
 import { Foods } from "./(customer)/_components/Foods";
 import { api } from "@/axios";
-import { CategorySkeleton } from "./(customer)/_components/CategorySkeleton";
+import {
+  CategoriesSkeleton,
+  CategorySkeleton,
+} from "./(customer)/_components/CategorySkeleton";
 
 export type CategoryType = {
   categoryName: string;
@@ -18,15 +21,19 @@ export default function Home() {
   const [category, setCategory] = useState<CategoryType[]>([]);
   const [selectedCategory, setSelectedCategory] = useState<string>("");
   const [loading, setLoading] = useState(true);
+  const [loadError, setLoadError] = useState(false);
 
   const getCategories = async () => {
     try {
       setLoading(true);
+      setLoadError(false);
       const response = await api.get("/category");
-      setCategory(response.data.categories);
+      setCategory(response.data.categories ?? []);
     } catch (error) {
-      console.error("Error fetching categories:", error);
+      // warn, not error: the Next dev overlay pops up on console.error
+      console.warn("Error fetching categories:", error);
       setCategory([]);
+      setLoadError(true);
     } finally {
       setLoading(false);
     }
@@ -48,22 +55,22 @@ export default function Home() {
 
         <div id="products" className="scroll-mt-20" />
         {loading ? (
-          <>
-            <div className="px-4 sm:px-6 md:px-8 lg:px-10 bg-[#404040] py-6 sm:py-8">
-              <div className="h-6 bg-gray-300 rounded animate-pulse w-32 mb-4 sm:mb-6" />
-              <div className="flex flex-wrap gap-2 sm:gap-3 md:gap-4">
-                {Array.from({ length: 5 }).map((_, i) => (
-                  <div
-                    key={i}
-                    className="h-8 sm:h-10 bg-gray-300 rounded-full animate-pulse w-20 sm:w-24"
-                  />
-                ))}
-              </div>
-            </div>
-
+          <div role="status" aria-label="Ачааллаж байна">
+            <CategoriesSkeleton />
             <CategorySkeleton />
-            <CategorySkeleton />
-          </>
+          </div>
+        ) : loadError ? (
+          <div className="px-4 py-16 text-center">
+            <p className="mb-4 text-[#1A1A1A]/70">
+              Бүтээгдэхүүн ачааллаж чадсангүй. Түр хүлээгээд дахин оролдоно уу.
+            </p>
+            <button
+              onClick={getCategories}
+              className="rounded-full bg-[#1A1A1A] px-6 py-2 text-sm font-medium text-white hover:bg-black"
+            >
+              Дахин оролдох
+            </button>
+          </div>
         ) : (
           <>
             <Categories

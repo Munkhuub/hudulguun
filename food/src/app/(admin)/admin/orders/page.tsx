@@ -18,16 +18,16 @@ import {
 } from "@/components/ui/select";
 import OrderedFoodView from "./_components/OrderedFoodView";
 import { api } from "@/axios";
+import { toast } from "sonner";
 
 export type ordersType = {
-  user: User;
+  user: User | null;
   _id: string;
-  orderNumber: string;
   totalPrice: number;
   status: string;
   createdAt: string;
   foodOrderItems: Array<{
-    food: { foodName: string; image: string; _id: string };
+    food: { foodName: string; image: string; _id: string } | null;
     quantity: number;
   }>;
   shippingAddress: string;
@@ -40,11 +40,14 @@ export default function Home() {
   const [itemsPerPage, setItemsPerPage] = useState(10);
   const { user } = useAuth();
   const getAllOrders = useCallback(async () => {
-    const { data } = await api.get(`/orders/all`);
-
-    setOrders(data.order);
-    setFilteredOrders(data.order);
-    console.log(data.order);
+    try {
+      const { data } = await api.get(`/orders/all`);
+      setOrders(data.order ?? []);
+      setFilteredOrders(data.order ?? []);
+    } catch (error) {
+      console.error("Failed to load orders:", error);
+      toast.error("Захиалга ачааллаж чадсангүй");
+    }
   }, []);
 
   useEffect(() => {
@@ -133,7 +136,7 @@ export default function Home() {
           <div>
             <p className="text-xl font-bold">Захиалга</p>
             <p className="text-xs text-[#71717A]">
-              {filteredOrders.length} items
+              {filteredOrders.length} захиалга
             </p>
           </div>
           <div className="flex gap-3">
@@ -188,9 +191,9 @@ export default function Home() {
             <tbody className="w-full h-13 border-b-[1px] border-[#F4F4F5CC]">
               {currentOrders.map((order, index) => (
                 <tr key={order._id}>
-                  <th className="w-14 font-medium p-4">{index + 1}</th>
+                  <th className="w-14 font-medium p-4">{indexOfFirstItem + index + 1}</th>
                   <th className="w-[213.5px] font-medium p-4">
-                    {order.user.email}
+                    {order.user?.email ?? "Устгагдсан хэрэглэгч"}
                   </th>
                   <th className="w-40 font-medium p-4">
                     <OrderedFoodView order={order} />

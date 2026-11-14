@@ -37,7 +37,7 @@ const DeliveryAddress = ({}) => {
 
     const userId = user?._id;
     if (!userId) {
-      setError("User not logged in or ID not available.");
+      setError("Нэвтэрсэн хэрэглэгч олдсонгүй.");
       toast.error("Хэрэглэгч олдсонгүй. Дахин нэвтэрнэ үү.");
       return;
     }
@@ -90,20 +90,28 @@ const DeliveryAddress = ({}) => {
   };
 
   return (
-    <Dialog open={open} onOpenChange={setOpen}>
+    <Dialog
+      open={open}
+      onOpenChange={(next) => {
+        if (next) {
+          const current = user?.address;
+          setUserAddress(current && current !== "address not added" ? current : "");
+          setError("");
+        }
+        setOpen(next);
+      }}
+    >
       <DialogTrigger asChild>
-        <Button
-          variant="outline"
-          size="icon"
-          className="lg:w-[251px] h-[36px] rounded-full text-xs pl-2"
+        <button
+          type="button"
+          className="flex min-h-11 w-full items-center gap-2 rounded-xl bg-[#F4F2EF] px-3 py-2 text-left text-sm hover:bg-[#1A1A1A]/5"
         >
-          <MapPin className="text-[#EF4444]" />
-          <p className="text-[#EF4444]">Хүргэлтийн хаяг:</p>
-          <p className="text-[#71717A] truncate max-w-[100px] ">
+          <MapPin className="size-4 shrink-0 text-[#1A1A1A]/60" />
+          <span className={`flex-1 truncate ${user?.address && user.address !== "address not added" ? "" : "font-semibold text-[#7B5CF5]"}`}>
             {user?.address && user.address !== "address not added" ? user.address : "Хаяг нэмэх"}
-          </p>
-          <ChevronRightIcon className="text-[#71717A]" />
-        </Button>
+          </span>
+          <ChevronRightIcon className="size-4 shrink-0 text-[#1A1A1A]/40" />
+        </button>
       </DialogTrigger>
       <DialogContent className="p-6 ">
         <DialogHeader className=" h-9 justify-center">
@@ -137,7 +145,7 @@ const DeliveryAddress = ({}) => {
               </Button>
             </DialogClose>
             <Button type="submit" disabled={isSubmitting}>
-              {isSubmitting ? "Updating..." : "Deliver Here"}
+              {isSubmitting ? "Хадгалж байна..." : "Хадгалах"}
             </Button>
           </DialogFooter>
         </form>

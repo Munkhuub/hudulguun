@@ -9,22 +9,24 @@ import {
   SheetTrigger,
 } from "@/components/ui/sheet";
 import { Cart } from "./_assets/Cart";
+import DeliveryAddress from "./DeliveryAddress";
+import { ProductImage } from "@/components/ProductImage";
+import Link from "next/link";
 import { Minus, Plus, ShoppingCartIcon, X } from "lucide-react";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { toast } from "sonner";
 import { useCart } from "./CartContext";
 import { useAuth } from "@/app/_providers/AuthProvider";
 import OrderHistory from "./OrderHistory";
 import { api } from "@/axios";
+import { isAxiosError } from "axios";
 
 type OrderHistoryItem = {
   _id: string;
-  orderNumber: string;
   totalPrice: number;
   status: string;
   createdAt: string;
-  foodOrderItems: Array<{ food: { foodName: string }; quantity: number }>;
+  foodOrderItems: Array<{ food: { foodName: string } | null; quantity: number }>;
   shippingAddress: string;
 };
 
@@ -59,18 +61,10 @@ const CartDetail = () => {
       await api.post(
         "/orders",
         {
-          user: user._id,
-          totalPrice: total,
           foodOrderItems: cartItems.map((item) => ({
             food: item.id,
             quantity: item.quantity,
           })),
-          status: "Pending",
-        },
-        {
-          headers: {
-            Authorization: `${localStorage.getItem("token")}`,
-          },
         }
       );
       toast.success("Захиалга амжилттай илгээгдлээ!");
@@ -78,11 +72,20 @@ const CartDetail = () => {
       setActiveTab("history");
     } catch (error) {
       console.error("Error placing order:", error);
-      toast.error("Захиалга илгээж чадсангүй. Дахин оролдоно уу.");
+      const res = isAxiosError(error) ? error.response : undefined;
+      const missing: unknown = res?.data?.missing;
+      if (res?.status === 409 && Array.isArray(missing)) {
+        missing.forEach((id) => removeItem(String(id)));
+        toast.error("Зарим бүтээгдэхүүн дууссан тул сагснаас хасагдлаа. Дахин шалгаад захиална уу.");
+      } else if (res?.status === 400 && res.data?.message === "Delivery address is required") {
+        toast.error("Хүргэлтийн хаягаа оруулна уу");
+      } else {
+        toast.error("Захиалга илгээж чадсангүй. Дахин оролдоно уу.");
+      }
     } finally {
       setIsPlacingOrder(false);
     }
-  }, [user, cartItems, total, clearCart, setActiveTab]);
+  }, [user, cartItems, clearCart, removeItem, setActiveTab]);
 
   const fetchOrderHistory = useCallback(async () => {
     if (!user) {
@@ -92,11 +95,7 @@ const CartDetail = () => {
 
     setIsLoadingOrders(true);
     try {
-      const response = await api.get(`/orders`, {
-        headers: {
-          Authorization: `${localStorage.getItem("token")}`,
-        },
-      });
+      const response = await api.get(`/orders`);
       setOrderHistory(response.data.order);
     } catch (error) {
       console.error("Error fetching order history:", error);
@@ -126,163 +125,143 @@ const CartDetail = () => {
     }
   }, [open, activeTab, user, fetchOrderHistory]);
 
+  const itemCount = cartItems.reduce((n, i) => n + i.quantity, 0);
+  const hasAddress = !!user?.address?.trim() && user.address !== "address not added";
+
   return (
     <Sheet open={open} onOpenChange={setOpen}>
       <SheetTrigger asChild>
-        <Button variant="outline" size="icon" className="rounded-full">
+        <Button
+          variant="outline"
+          size="icon"
+          className="relative size-10 rounded-full border-none bg-white shadow-sm hover:bg-white/70"
+          aria-label={`Сагс${itemCount ? ` (${itemCount})` : ""}`}
+        >
           <Cart />
+          {itemCount > 0 && (
+            <span className="absolute -top-1 -right-1 flex h-5 min-w-5 items-center justify-center rounded-full bg-[#1A1A1A] px-1 text-[11px] font-bold text-white">
+              {itemCount > 99 ? "99+" : itemCount}
+            </span>
+          )}
         </Button>
       </SheetTrigger>
-      <SheetContent className="bg-[#404040] w-full max-w-[95vw] sm:max-w-[535px] p-4 sm:p-[32px] border-none rounded-l-[20px] overflow-hidden">
+      <SheetContent className="flex w-full max-w-full flex-col gap-0 overflow-y-auto border-none bg-[#F4F2EF] p-4 sm:max-w-[480px] sm:rounded-l-3xl sm:p-6">
         <SheetHeader className="p-0">
-          <div className="flex gap-3 items-center text-white">
-            <ShoppingCartIcon className="size-5 sm:size-6" />
-            <SheetTitle className="text-white text-lg sm:text-xl">
-              Захиалгын дэлгэрэнгүй
-            </SheetTitle>
-          </div>
+          <SheetTitle className="font-display flex items-center gap-2 text-lg sm:text-xl">
+            <ShoppingCartIcon className="size-5" />
+            Сагс
+          </SheetTitle>
         </SheetHeader>
-        <Tabs
-          defaultValue="cart"
-          value={activeTab}
-          onValueChange={setActiveTab}
-        >
-          <TabsList className="grid w-full grid-cols-2 mt-4">
-            <TabsTrigger value="cart" className="text-sm">
-              Сагс
+        <Tabs value={activeTab} onValueChange={setActiveTab} className="mt-4">
+          <TabsList className="grid h-11 w-full grid-cols-2 rounded-full bg-[#1A1A1A]/5 p-1">
+            <TabsTrigger value="cart" className="rounded-full text-sm font-semibold">
+              Сагс{itemCount ? ` (${itemCount})` : ""}
             </TabsTrigger>
-            <TabsTrigger value="history" className="text-sm">
+            <TabsTrigger value="history" className="rounded-full text-sm font-semibold">
               Захиалгын түүх
             </TabsTrigger>
           </TabsList>
-          <TabsContent value="cart" className="mt-4">
-            <Card className="p-2 sm:p-4 w-full bg-none">
-              <CardContent className="p-0 flex flex-col gap-3 sm:gap-5">
-                <CardHeader className="p-0">
-                  <CardTitle className="text-lg sm:text-xl">Миний сагс</CardTitle>
-                </CardHeader>
-
-                {cartItems.length > 0 ? (
-                  <div className="flex flex-col max-h-[50vh] sm:max-h-80 overflow-auto gap-3 sm:gap-5">
-                    {cartItems.map((food, index) => (
-                      <div
-                        className={`flex gap-2 sm:gap-[10px] pt-3 sm:pt-5 ${
-                          index !== 0 ? "border-t border-gray-300" : ""
-                        }`}
-                        key={food.id}
-                      >
-                        <div className="relative w-20 h-20 sm:w-[124px] sm:h-[120px] rounded-xl overflow-hidden flex-shrink-0">
-                          <img
-                            src={food.image}
-                            alt={food.foodName}
-                            sizes="(max-width: 640px) 80px, 124px"
-                            className="rounded-xl object-cover"
-                          />
-                        </div>
-                        <div className="flex flex-col justify-between flex-1 gap-3 sm:gap-6 min-w-0">
-                          <div className="flex justify-between">
-                            <div className="flex-1 min-w-0 pr-2">
-                              <SheetTitle className="text-sm sm:text-[16px]/[28px] text-[#EF4444] truncate">
-                                {food.foodName}
-                              </SheetTitle>
-                              <p className="text-xs/4 text-gray-600 line-clamp-2 sm:line-clamp-none">
-                                {food.ingredients}
-                              </p>
-                            </div>
-                            <button
-                              className="mb-auto mt-[1px] p-1 text-red-500 hover:text-red-700 flex-shrink-0"
-                              onClick={() => handleRemoveItem(food.id)}
-                            >
-                              <X className="h-3 w-3 sm:h-4 sm:w-4" />
-                            </button>
-                          </div>
-                          <div className="flex justify-between items-center w-full">
-                            <div className="flex gap-2 sm:gap-3 items-center">
-                              <Button
-                                size="icon"
-                                className="bg-white size-7 sm:size-9 shadow-none"
-                                onClick={() =>
-                                  handleQuantityUpdate(
-                                    food.id,
-                                    food.quantity - 1
-                                  )
-                                }
-                              >
-                                <Minus className="text-black size-3 sm:size-4" />
-                              </Button>
-                              <p className="text-sm sm:text-[18px] min-w-[20px] text-center">
-                                {food.quantity}
-                              </p>
-                              <Button
-                                size="icon"
-                                className="bg-white size-7 sm:size-9 shadow-none"
-                                onClick={() =>
-                                  handleQuantityUpdate(
-                                    food.id,
-                                    food.quantity + 1
-                                  )
-                                }
-                              >
-                                <Plus className="text-black size-3 sm:size-4" />
-                              </Button>
-                            </div>
-                            <div>
-                              <p className="font-semibold text-sm sm:text-base">
-                                {(food.price * food.quantity).toLocaleString("en-US")}₮
-                              </p>
-                            </div>
-                          </div>
-                        </div>
+          <TabsContent value="cart" className="mt-4 flex flex-col gap-4">
+            {cartItems.length > 0 ? (
+              <ul className="flex flex-col gap-3">
+                {cartItems.map((item) => (
+                  <li key={item.id} className="flex gap-3 rounded-2xl bg-white p-3">
+                    <div className="relative size-20 shrink-0 overflow-hidden rounded-xl bg-[#F4F2EF] sm:size-24">
+                      <ProductImage src={item.image} alt={item.foodName} fill sizes="96px" className="object-cover" />
+                    </div>
+                    <div className="flex min-w-0 flex-1 flex-col justify-between gap-2">
+                      <div className="flex items-start justify-between gap-2">
+                        <p className="line-clamp-2 text-sm font-bold sm:text-base">{item.foodName}</p>
+                        <button
+                          className="-m-1 shrink-0 rounded-full p-2 text-[#1A1A1A]/50 hover:bg-[#1A1A1A]/5 hover:text-[#1A1A1A]"
+                          onClick={() => handleRemoveItem(item.id)}
+                          aria-label={`${item.foodName} хасах`}
+                        >
+                          <X className="size-4" />
+                        </button>
                       </div>
-                    ))}
-                  </div>
-                ) : (
-                  <div className="p-6 text-center text-gray-500">
-                    Таны сагс хоосон байна
+                      <div className="flex items-center justify-between gap-2">
+                        <div className="flex items-center rounded-full bg-[#F4F2EF]">
+                          <button
+                            className="flex size-9 items-center justify-center rounded-full hover:bg-[#1A1A1A]/5"
+                            onClick={() => handleQuantityUpdate(item.id, item.quantity - 1)}
+                            aria-label="Тоо хасах"
+                          >
+                            <Minus className="size-4" />
+                          </button>
+                          <span className="min-w-6 text-center text-sm font-bold">{item.quantity}</span>
+                          <button
+                            className="flex size-9 items-center justify-center rounded-full hover:bg-[#1A1A1A]/5"
+                            onClick={() => handleQuantityUpdate(item.id, item.quantity + 1)}
+                            aria-label="Тоо нэмэх"
+                          >
+                            <Plus className="size-4" />
+                          </button>
+                        </div>
+                        <p className="text-sm font-bold sm:text-base">
+                          {(item.price * item.quantity).toLocaleString("en-US")}₮
+                        </p>
+                      </div>
+                    </div>
+                  </li>
+                ))}
+              </ul>
+            ) : (
+              <div className="rounded-2xl bg-white p-8 text-center text-[#1A1A1A]/60">
+                Таны сагс хоосон байна
+              </div>
+            )}
+
+            {cartItems.length > 0 && (
+              <>
+                {user && (
+                  <div className="rounded-2xl bg-white p-4">
+                    <p className="mb-2 text-sm font-bold">Хүргэлтийн хаяг</p>
+                    <DeliveryAddress />
                   </div>
                 )}
 
-                <div className="space-y-2 sm:space-y-3">
-                  <h3 className="text-lg sm:text-xl font-semibold">
-                    Төлбөрийн мэдээлэл
-                  </h3>
-                  <div className="flex justify-between text-sm sm:text-[16px]">
-                    <span className="text-[#71717A]">Бүтээгдэхүүн</span>
-                    <span className="font-bold">{Number(total).toLocaleString("en-US")}₮</span>
+                <div className="flex flex-col gap-2 rounded-2xl bg-white p-4 text-sm">
+                  <div className="flex justify-between">
+                    <span className="text-[#1A1A1A]/60">Бүтээгдэхүүн</span>
+                    <span className="font-semibold">{Number(total).toLocaleString("en-US")}₮</span>
                   </div>
-                  <div className="flex justify-between text-sm sm:text-[16px]">
-                    <span className="text-[#71717A]">Хүргэлт</span>
-                    <span className="font-bold">Үнэгүй</span>
+                  <div className="flex justify-between">
+                    <span className="text-[#1A1A1A]/60">Хүргэлт</span>
+                    <span className="font-semibold">Үнэгүй</span>
                   </div>
-                  <div className="mt-3 sm:mt-4 pt-3 sm:pt-4 border-t border-gray-200 text-sm sm:text-[16px]">
-                    <div className="flex justify-between">
-                      <span className="text-[#71717A]">Нийт дүн:</span>
-                      <span className="font-bold">{Number(total).toLocaleString("en-US")}₮</span>
-                    </div>
+                  <div className="mt-1 flex justify-between border-t border-[#1A1A1A]/10 pt-3 text-base">
+                    <span className="font-bold">Нийт дүн</span>
+                    <span className="font-display font-bold">{Number(total).toLocaleString("en-US")}₮</span>
                   </div>
                 </div>
 
-                {cartItems.length > 0 && (
-                  <SheetFooter className="mt-4">
+                <SheetFooter className="p-0">
+                  {user ? (
                     <Button
-                      type="submit"
-                      className="w-full rounded-full h-10 sm:h-11 bg-black text-sm sm:text-base"
+                      className="h-12 w-full rounded-full bg-[#1A1A1A] text-base font-semibold text-white hover:bg-black"
                       onClick={handlePlaceOrder}
-                      disabled={isPlacingOrder}
+                      disabled={isPlacingOrder || !hasAddress}
                     >
                       {isPlacingOrder
                         ? "Илгээж байна..."
-                        : "Захиалга өгөх"}
+                        : hasAddress
+                        ? "Захиалга өгөх"
+                        : "Хүргэлтийн хаягаа оруулна уу"}
                     </Button>
-                  </SheetFooter>
-                )}
-              </CardContent>
-            </Card>
+                  ) : (
+                    <Link
+                      href="/signin"
+                      className="flex h-12 w-full items-center justify-center rounded-full bg-[#1A1A1A] text-base font-semibold text-white hover:bg-black"
+                    >
+                      Захиалахын тулд нэвтэрнэ үү
+                    </Link>
+                  )}
+                </SheetFooter>
+              </>
+            )}
           </TabsContent>
-          <OrderHistory
-            orderHistory={orderHistory}
-            isLoadingOrders={isLoadingOrders}
-          />
+          <OrderHistory orderHistory={orderHistory} isLoadingOrders={isLoadingOrders} />
         </Tabs>
       </SheetContent>
     </Sheet>

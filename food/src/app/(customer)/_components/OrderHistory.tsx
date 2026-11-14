@@ -9,11 +9,10 @@ import OrderMapIcon from "./_assets/OrderMapIcon";
 
 type OrderHistoryItem = {
   _id: string;
-  orderNumber: string;
   totalPrice: number;
   status: string;
   createdAt: string;
-  foodOrderItems: Array<{ food: { foodName: string }; quantity: number }>;
+  foodOrderItems: Array<{ food: { foodName: string } | null; quantity: number }>;
   shippingAddress: string;
 };
 
@@ -44,7 +43,7 @@ const OrderHistory = ({ orderHistory, isLoadingOrders }: OrderHistoryProps) => {
                           {order.totalPrice.toLocaleString("en-US")}₮
                         </span>
                         <span className="text-gray-600">
-                          (#{order.orderNumber})
+                          (#{order._id.slice(-6).toUpperCase()})
                         </span>
                       </div>
                       <Button
@@ -61,7 +60,7 @@ const OrderHistory = ({ orderHistory, isLoadingOrders }: OrderHistoryProps) => {
                       <div key={itemIndex} className="flex justify-between">
                         <div className="flex gap-2 items-center">
                           <OrderFoodIcon />
-                          <p>{item.food.foodName}</p>
+                          <p>{item.food?.foodName ?? "Устгагдсан бүтээгдэхүүн"}</p>
                         </div>
                         <div>x{item.quantity}</div>
                       </div>

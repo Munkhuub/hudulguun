@@ -28,6 +28,9 @@ interface CartContextType {
   clearCart: () => void;
 }
 
+// Must match MAX_QTY_PER_ITEM in food-api createOrderController.
+const MAX_QTY = 99;
+
 const CartContext = createContext<CartContextType | undefined>(undefined);
 
 export const CartProvider = ({ children }: { children: ReactNode }) => {
@@ -38,7 +41,19 @@ export const CartProvider = ({ children }: { children: ReactNode }) => {
     try {
       const savedCart = localStorage.getItem("foodCart");
       const parsed = savedCart ? JSON.parse(savedCart) : [];
-      if (Array.isArray(parsed)) setCartItems(parsed);
+      if (Array.isArray(parsed)) {
+        setCartItems(
+          parsed.filter(
+            (i) =>
+              i &&
+              typeof i.id === "string" &&
+              /^[a-f0-9]{24}$/i.test(i.id) &&
+              Number.isInteger(i.quantity) &&
+              i.quantity > 0 &&
+              typeof i.price === "number"
+          )
+        );
+      }
     } catch {
       // Corrupted or blocked storage: start with an empty cart.
     }
@@ -70,7 +85,7 @@ export const CartProvider = ({ children }: { children: ReactNode }) => {
           const newItems = [...prevItems];
           newItems[existingItemIndex] = {
             ...newItems[existingItemIndex],
-            quantity: newItems[existingItemIndex].quantity + quantity,
+            quantity: Math.min(newItems[existingItemIndex].quantity + quantity, MAX_QTY),
           };
           return newItems;
         } else {
@@ -115,7 +130,7 @@ export const CartProvider = ({ children }: { children: ReactNode }) => {
 
     setCartItems((prevItems) =>
       prevItems.map((item) =>
-        item.id === id ? { ...item, quantity: newQuantity } : item
+        item.id === id ? { ...item, quantity: Math.min(newQuantity, MAX_QTY) } : item
       )
     );
   };

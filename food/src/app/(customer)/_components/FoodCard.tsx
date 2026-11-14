@@ -1,3 +1,4 @@
+import { ProductImage } from "@/components/ProductImage";
 import { AddToCard } from "./AddToCard";
 import { FoodsType } from "./Foods";
 
@@ -7,35 +8,25 @@ type FoodCardProps = {
 
 export const FoodCard = ({ food }: FoodCardProps) => {
   return (
-    <div className="w-full max-w-sm mx-auto h-full p-4 lg:p-5 bg-white rounded-2xl md:rounded-[20px] flex flex-col gap-3 lg:gap-4 relative shadow-md hover:shadow-lg transition-shadow">
-      <div className="relative overflow-hidden rounded-xl aspect-square flex-shrink-0">
-        <img
-          src={food?.image}
+    <article className="group flex h-full w-full flex-col overflow-hidden rounded-3xl bg-white shadow-[0_8px_30px_-12px_rgba(26,26,26,0.18)] transition-shadow hover:shadow-[0_16px_40px_-12px_rgba(26,26,26,0.28)]">
+      <div className="relative aspect-square w-full overflow-hidden bg-[#F4F2EF]">
+        <ProductImage
+          src={food.image}
           alt={food.foodName}
-          className="w-full h-full object-cover transition-transform duration-500 hover:scale-105"
-          loading="lazy"
+          fill
+          sizes="(min-width: 1024px) 360px, (min-width: 640px) 50vw, 100vw"
+          className="object-cover transition-transform duration-500 group-hover:scale-[1.03]"
         />
       </div>
 
-      <div className="flex flex-col gap-2 flex-1">
-        <div className="flex justify-between items-start gap-2">
-          <h3 className="text-base md:text-lg lg:text-xl font-semibold flex-1 leading-tight text-gray-900 line-clamp-2">
-            {food.foodName}
-          </h3>
-          <p className="text-base md:text-lg lg:text-xl font-semibold whitespace-nowrap text-red-500 flex-shrink-0">
-            {food.price.toLocaleString("en-US")}₮
-          </p>
-        </div>
-        <div className="flex-1 min-h-[3rem] md:min-h-[3.5rem]">
-          <p className="text-sm md:text-base text-gray-600 line-clamp-3">
-            {food.ingredients}
-          </p>
-        </div>
-      </div>
-
-      <div className="mt-auto">
+      <div className="flex flex-1 flex-col gap-2 p-4 sm:p-5">
+        <h3 className="text-lg leading-snug font-bold">{food.foodName}</h3>
+        <p className="line-clamp-2 text-sm text-[#1A1A1A]/60">{food.ingredients}</p>
+        <p className="font-display mt-auto pt-2 text-xl font-bold">
+          {food.price.toLocaleString("en-US")}₮
+        </p>
         <AddToCard food={food} />
       </div>
-    </div>
+    </article>
   );
 };

@@ -26,33 +26,17 @@ const STATUS_LABELS: Record<string, string> = {
 
 const OrderStatusSelect = ({ order }: statusProps) => {
   const [newStatus, setNewStatus] = useState(order.status);
-  const updateStatus = async (status: string) => {
+  const handleSelectStatus = async (status: string) => {
+    const previous = newStatus;
+    setNewStatus(status);
     try {
-      const userId = order?._id;
-      const token = localStorage.getItem("token");
-
-      const { data } = await api.put(
-        `/orders/${userId}`,
-        {
-          status,
-        },
-        {
-          headers: {
-            Authorization: `${token}`,
-          },
-        }
-      );
-      console.log("status updated successfully", data);
+      await api.put(`/orders/${order._id}`, { status });
       toast.success("Төлөв шинэчлэгдлээ");
     } catch (error) {
       console.error("Failed to update status", error);
+      setNewStatus(previous); // revert so the UI matches the database
       toast.error("Төлөв шинэчилж чадсангүй");
     }
-  };
-
-  const handleSelectStatus = async (status: string) => {
-    setNewStatus(status);
-    await updateStatus(status);
   };
 
   const borderColorClass =

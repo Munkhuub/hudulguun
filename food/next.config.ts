@@ -5,6 +5,13 @@ import type { NextConfig } from "next";
 const apiProxyUrl = process.env.API_PROXY_URL;
 
 const nextConfig: NextConfig = {
+  images: {
+    // Product photos are uploaded to Cloudinary from the admin.
+    remotePatterns: [
+      { protocol: "https", hostname: "res.cloudinary.com" },
+      { protocol: "http", hostname: "res.cloudinary.com" },
+    ],
+  },
   async rewrites() {
     if (!apiProxyUrl) return [];
     return [{ source: "/api/:path*", destination: `${apiProxyUrl}/api/:path*` }];

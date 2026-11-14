@@ -55,7 +55,7 @@ export const AddFood = ({
           },
         }
       );
-      const result = response.data.url;
+      const result = response.data.secure_url || response.data.url;
       return result;
     } catch (error) {
       console.error("Image upload failed:", error);
@@ -72,6 +72,7 @@ export const AddFood = ({
         setDeployedImg(imageUrl);
       } else {
         setDeployedImg("");
+        toast.error("Зураг хуулж чадсангүй");
       }
       setLoading(false);
     }
@@ -82,7 +83,7 @@ export const AddFood = ({
       setLoading(true);
 
       if (!deployedImg) {
-        console.error("No image uploaded.");
+        toast.error("Зураг оруулна уу");
         setLoading(false);
         return;
       }
@@ -95,6 +96,7 @@ export const AddFood = ({
         category: categoryId,
       });
 
+      toast.success("Бүтээгдэхүүн нэмэгдлээ");
       await getFoods();
       setOpen(false);
       setFoodName("");
@@ -206,7 +208,7 @@ export const AddFood = ({
           >
             {loading ? (
               <>
-                Saving... <span className="ml-2 animate-spin">🌀</span>
+                Хадгалж байна... <span className="ml-2 animate-spin">🌀</span>
               </>
             ) : (
               "Хадгалах"
