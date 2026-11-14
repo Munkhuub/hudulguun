@@ -4,6 +4,7 @@ import { PropsWithChildren, useContext, useEffect, useState } from "react";
 import { toast } from "sonner";
 import { createContext } from "react";
 import { api, setAuthToken } from "@/axios";
+import { isAxiosError } from "axios";
 
 export type User = {
   _id: string;
@@ -117,8 +118,14 @@ export const AuthProvider = ({ children }: PropsWithChildren) => {
           },
         });
         setUser(data);
-      } catch {
-        localStorage.removeItem("token");
+      } catch (error) {
+        // Only an auth rejection means the token is bad. Network errors / 503
+        // (e.g. database down) must not log the user out.
+        const status = isAxiosError(error) ? error.response?.status : undefined;
+        if (status === 401 || status === 404) {
+          localStorage.removeItem("token");
+          setAuthToken(null);
+        }
         setUser(undefined);
       } finally {
         setLoading(false);

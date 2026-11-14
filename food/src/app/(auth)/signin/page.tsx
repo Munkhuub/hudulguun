@@ -2,16 +2,15 @@
 
 import { StepProvider } from "../StepProvider";
 import { Login } from "./_components/Login";
-import { AuthProvider } from "@/app/_providers/AuthProvider";
 
 export default function Home() {
   return (
     <StepProvider>
-      <AuthProvider>
-        <div className="w-full m-auto relative">
-          <Login />
-        </div>
-      </AuthProvider>
+      {/* Uses the root AuthProvider from app/layout.tsx — a nested one here
+          created a second, separate login state and a /signin ⇄ /admin loop. */}
+      <div className="w-full m-auto relative">
+        <Login />
+      </div>
     </StepProvider>
   );
 }

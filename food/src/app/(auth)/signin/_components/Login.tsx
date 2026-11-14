@@ -24,7 +24,7 @@ export const Login = () => {
   // Redirect if user is already authenticated
   useEffect(() => {
     if (user) {
-      router.push(user.role === "admin" ? "/admin" : "/");
+      router.replace(user.role === "admin" ? "/admin" : "/");
     }
   }, [user, router]);
 
